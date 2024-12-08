@@ -25,6 +25,14 @@ async def salary_prediction(data: SalaryRequestForm):
         'result': ans,
         'previous_result': last_picked,
     }
+
+
+@app.get('/p/salary')
+async def salary_result():
+    last_picked = sal.last | 0
+    return {
+        "result": last_picked
+    }
 # @app.get('/dataset')
 # async def get_dataset
 

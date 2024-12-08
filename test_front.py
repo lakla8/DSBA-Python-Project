@@ -14,16 +14,18 @@ st.set_page_config(
 st.sidebar.title("Navigation")
 st.sidebar.markdown("### Select an Option")
 menu = st.sidebar.radio("Menu", ["Home", "Data Overview", "Visualization", "Insights", "Prediction", "About"])
+URL = "http://127.0.0.1:8000/{}"
 
 
 @st.cache_data
 def load_data():
     url = "DataScience_salaries_2024.csv"
     data_ = get_dataset(url)
-    return data_
+    salary_last = json.loads(requests.get(URL.format('p/salary')).content)['result']
+    return data_, salary_last
 
 
-data = load_data()
+data, previous_result = load_data()
 
 if menu == "Home":
     st.title("DSBA Python project 2024")
@@ -67,9 +69,9 @@ elif menu == "Visualization":
 elif menu == "Insights":
     st.title("Insights")
     st.markdown("### Key Takeaways")
-    st.write("Senior data scientists earn significantly more than entry-level professionals.")
-    st.write("Fully remote roles tend to offer higher average salaries.")
-    st.write("Large companies generally pay more than smaller ones.")
+    st.write("Salaries paid in USD currency are usually higher in comparison with other currencies.")
+    st.write("However, also from statistics before, we could suggest that there are not only this hypothesis")
+    st.write("Let's look at the graphs")
 
     st.markdown("### Discussion")
     st.write(
@@ -102,8 +104,6 @@ elif menu == "Insights":
     st.line_chart(exp_salary_by_size.set_index('Experience Level'), height=300)
 
 elif menu == "Prediction":
-    URL = "http://127.0.0.1:8000/{}"
-    prev_result = 0
 
     with st.form("form"):
         st.write("Include data about yourself")
@@ -126,7 +126,7 @@ elif menu == "Prediction":
         submitted = st.form_submit_button("Submit")
 
     if submitted:
-        st.write("button has been pressed")
+        st.write("Here's your predicted salary!")
         request_data = json.dumps({
             'remote_ratio': remote,
             'currency_ratio': currency,
@@ -136,16 +136,16 @@ elif menu == "Prediction":
 
         response = requests.post(URL.format('salary'), request_data)
         data = json.loads(response.content)
-        delta_ = float(data['result'] - data['previous_result']) if float(data['previous_result']) != 0 else None
+
+        previous_result = data['previous_result']
 
         st.metric(
             label="Expected Salary",
             value=f"{data['result']:.2f}",
-            delta=f"{float(data['result'] - data['previous_result']):.2f}" if float(data['previous_result']) != 0
+            delta=f"{float(data['result'] - previous_result):.2f}" if float(previous_result) != 0
             else None
         )
 
-        prev_result = data['result']
 
 elif menu == "About":
     st.title("About this Dashboard")
