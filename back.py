@@ -1,16 +1,15 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from model import predict_salary, reg, enc
-
-
-class SalaryRequestForm(BaseModel):
-    remote_ratio: int
-    currency_ratio: float
-    experience_level: str
-    company_size: str
+from model import (
+    predict_salary,
+    reg, enc,
+    SalaryHistory,
+    save_result
+)
+from schema import SalaryRequestForm
 
 
 app = FastAPI(docs_url='/')
+sal = SalaryHistory()
 
 
 @app.put("/echo")
@@ -21,9 +20,13 @@ async def root(message: str):
 @app.post('/salary')
 async def salary_prediction(data: SalaryRequestForm):
     ans: float = predict_salary(data.json(), reg, enc)
+    last_picked = save_result(ans, sal)
     return {
-        "result": ans
+        'result': ans,
+        'previous_result': last_picked,
     }
+# @app.get('/dataset')
+# async def get_dataset
 
 
 
